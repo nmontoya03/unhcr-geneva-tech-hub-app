@@ -21,6 +21,7 @@
                 greater-better
               ></energy-key-indicator>
               <energy-chart
+                ref="energyChart"
                 title="Energy"
                 :years="years"
                 :items="energy"
@@ -34,6 +35,7 @@
                 :value="globalResult.woodArea"
               ></energy-key-indicator>
               <energy-chart
+                ref="forestChart"
                 title="Equivalent forested area"
                 :years="years"
                 :items="wood"
@@ -45,6 +47,7 @@
                 </v-col>
                 <v-col>
                   <energy-radar-chart
+                    ref="radarChart"
                     :items="radarItems"
                     :properties="radarProperties"
                   ></energy-radar-chart>
@@ -62,18 +65,21 @@
                 :value="globalResult.emissionCo2"
               ></energy-key-indicator>
               <energy-chart
+                ref="co2Chart"
                 title="CO2"
                 :years="years"
                 :items="emissionCo2"
                 :y-labels="['CO2 Emission [kg]']"
               ></energy-chart>
               <energy-chart
+                ref="coChart"
                 title="CO"
                 :years="years"
                 :items="emissionCo"
                 :y-labels="['CO Emission [g]']"
               ></energy-chart>
               <energy-chart
+                ref="pmChart"
                 title="PM"
                 :years="years"
                 :items="emissionPm"
@@ -91,12 +97,14 @@
                 :value="globalResult.discountedCost"
               ></energy-key-indicator>
               <energy-chart
+                ref="incomeChart"
                 title="Income"
                 :years="years"
                 :items="income"
                 :y-labels="['Income [$]']"
               ></energy-chart>
               <energy-chart
+                ref="costChart"
                 title="Cost"
                 :years="years"
                 :items="cost"
@@ -111,6 +119,7 @@
                 greater-better
               ></energy-key-indicator>
               <energy-chart
+                ref="affordabilityChart"
                 title="Affordability"
                 :years="years"
                 :items="affordability"
@@ -125,6 +134,15 @@
                 <v-expansion-panel>
                   <v-expansion-panel-header>
                     <span>Details</span>
+                    <v-btn
+                      class="flex-grow-0"
+                      color="primary"
+                      text
+                      @click.stop.prevent="downloadCharts"
+                    >
+                      <v-icon left>$mdiDownload</v-icon>
+                      Download Charts
+                    </v-btn>
                     <v-btn
                       class="flex-grow-0"
                       color="primary"
@@ -246,9 +264,10 @@ import {
 } from "@/utils/energy";
 import download from "downloadjs";
 import { Workbook } from "exceljs";
+import JSZip from "jszip";
 import { chain, clamp, cloneDeep, range, sortBy, sumBy, zip } from "lodash";
 import "vue-class-component/hooks";
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Ref, Vue } from "vue-property-decorator";
 import { mapState } from "vuex";
 
 @Component({
@@ -275,6 +294,24 @@ export default class EnergyCookingResult extends Vue {
   documentName!: string;
   @Prop({ type: String })
   documentSiteName!: string;
+  @Ref()
+  readonly energyChart!: EnergyChart;
+  @Ref()
+  readonly forestChart!: EnergyChart;
+  @Ref()
+  readonly radarChart!: EnergyRadarChart;
+  @Ref()
+  readonly co2Chart!: EnergyChart;
+  @Ref()
+  readonly coChart!: EnergyChart;
+  @Ref()
+  readonly pmChart!: EnergyChart;
+  @Ref()
+  readonly incomeChart!: EnergyChart;
+  @Ref()
+  readonly costChart!: EnergyChart;
+  @Ref()
+  readonly affordabilityChart!: EnergyChart;
 
   readonly radarProperties: RadarProperty<GlobalResult>[] = [
     {
@@ -1134,6 +1171,22 @@ export default class EnergyCookingResult extends Vue {
       });
 
     return workbook;
+  }
+
+  async downloadCharts(): Promise<void> {
+    const zip = new JSZip();
+    zip.file("energy/energy.svg", this.energyChart.getSvgData());
+    zip.file("energy/forest.svg", this.forestChart.getSvgData());
+    zip.file("energy/radar.svg", this.radarChart.getSvgData());
+    zip.file("emission/co2.svg", this.co2Chart.getSvgData());
+    zip.file("emission/co.svg", this.coChart.getSvgData());
+    zip.file("emission/pm.svg", this.pmChart.getSvgData());
+    zip.file("economy/income.svg", this.incomeChart.getSvgData());
+    zip.file("economy/cost.svg", this.costChart.getSvgData());
+    zip.file("economy/affordability.svg", this.affordabilityChart.getSvgData());
+    zip
+      .generateAsync({ type: "blob" })
+      .then((data) => download(data, "unhcr-tss-energy-household-cooking.zip"));
   }
 }
 

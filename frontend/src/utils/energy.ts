@@ -74,3 +74,7 @@ export function getColor(cat: SocioEconomicCategory): string {
 export function toPercentage(value?: number): number | undefined {
   return value !== undefined ? value * 100 : undefined;
 }
+
+export function decodeDataUrl(dataUrl: string): string {
+  return decodeURIComponent(dataUrl.split(",")[1]);
+}

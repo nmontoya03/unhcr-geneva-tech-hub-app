@@ -1,21 +1,27 @@
 <template>
   <v-responsive aspect-ratio="1">
-    <v-chart autoresize :option="option"></v-chart>
+    <v-chart
+      ref="chart"
+      autoresize
+      :init-options="initOptions"
+      :option="option"
+    ></v-chart>
   </v-responsive>
 </template>
 
 <script lang="ts">
 import { cccmColors } from "@/plugins/vuetify";
+import { decodeDataUrl } from "@/utils/energy";
 import { RadarChart } from "echarts/charts";
 import { LegendComponent, TitleComponent } from "echarts/components";
 import { use } from "echarts/core";
-import { CanvasRenderer } from "echarts/renderers";
-import { EChartsOption } from "echarts/types/dist/shared";
+import { SVGRenderer } from "echarts/renderers";
+import { EChartsOption, EChartsType } from "echarts/types/dist/shared";
 import "vue-class-component/hooks";
 import VChart from "vue-echarts";
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Ref, Vue } from "vue-property-decorator";
 
-use([CanvasRenderer, RadarChart, LegendComponent, TitleComponent]);
+use([SVGRenderer, RadarChart, LegendComponent, TitleComponent]);
 
 @Component({
   components: {
@@ -23,8 +29,11 @@ use([CanvasRenderer, RadarChart, LegendComponent, TitleComponent]);
   },
 })
 export default class EnergyRadarChart<
-  T extends Record<string, number>
+  T extends Record<string, number> = Record<string, number>
 > extends Vue {
+  readonly initOptions = {
+    renderer: "svg",
+  };
   @Prop(String)
   readonly title: string | undefined;
   @Prop({
@@ -34,6 +43,8 @@ export default class EnergyRadarChart<
   readonly items!: RadarItem<T>[];
   @Prop({ type: Array as () => RadarProperty<T>[], default: () => [] })
   readonly properties!: RadarProperty<T>[];
+  @Ref()
+  readonly chart!: EChartsType;
 
   get option(): EChartsOption {
     return {
@@ -63,6 +74,10 @@ export default class EnergyRadarChart<
       },
       color: [cccmColors.primary, cccmColors.primary50],
     };
+  }
+
+  getSvgData(): string {
+    return decodeDataUrl(this.chart.getDataURL());
   }
 }
 

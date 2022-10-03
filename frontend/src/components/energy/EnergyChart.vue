@@ -1,12 +1,18 @@
 <template>
   <v-responsive aspect-ratio="2">
-    <v-chart autoresize :option="option"></v-chart>
+    <v-chart
+      ref="chart"
+      autoresize
+      :init-options="initOptions"
+      :option="option"
+    ></v-chart>
   </v-responsive>
 </template>
 
 <script lang="ts">
 import { formatNumber } from "@/plugins/filters";
 import { TooltipFormatterParams } from "@/utils/echarts";
+import { decodeDataUrl } from "@/utils/energy";
 import { BarChart, LineChart } from "echarts/charts";
 import {
   GridComponent,
@@ -14,20 +20,21 @@ import {
   TooltipComponent,
 } from "echarts/components";
 import { use } from "echarts/core";
-import { CanvasRenderer } from "echarts/renderers";
+import { SVGRenderer } from "echarts/renderers";
 import {
   BarSeriesOption,
   EChartsOption,
+  EChartsType,
   LineSeriesOption,
   TopLevelFormatterParams,
   YAXisOption,
 } from "echarts/types/dist/shared";
 import "vue-class-component/hooks";
 import VChart from "vue-echarts";
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Ref, Vue } from "vue-property-decorator";
 
 use([
-  CanvasRenderer,
+  SVGRenderer,
   BarChart,
   LineChart,
   GridComponent,
@@ -41,6 +48,9 @@ use([
   },
 })
 export default class EnergyChart extends Vue {
+  readonly initOptions = {
+    renderer: "svg",
+  };
   @Prop(String)
   readonly title: string | undefined;
   @Prop({
@@ -56,6 +66,8 @@ export default class EnergyChart extends Vue {
   readonly yLabels: string[] | undefined;
   @Prop({ type: Boolean, default: false })
   readonly yInverse!: boolean;
+  @Ref()
+  readonly chart!: EChartsType;
 
   get option(): EChartsOption {
     return {
@@ -143,6 +155,10 @@ export default class EnergyChart extends Vue {
       }),
       color: this.items.flatMap((item) => item.color),
     };
+  }
+
+  getSvgData(): string {
+    return decodeDataUrl(this.chart.getDataURL());
   }
 }
 
