@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "serve",
+      "label": "serve-frontend",
       "type": "npm",
       "script": "serve",
       "isBackground": true,
@@ -23,6 +23,22 @@
       "options": {
         "cwd": "frontend"
       }
+    },
+    {
+      "label": "run-couchdb",
+      "type": "docker-compose",
+      "dockerCompose": {
+        "up": {
+          "detached": true,
+          "build": true,
+          "services": ["couchdb"]
+        },
+        "files": ["${workspaceFolder}/docker-compose.yml"]
+      }
+    },
+    {
+      "label": "frontend",
+      "dependsOn": ["serve-frontend", "run-couchdb"]
     }
   ]
 }
