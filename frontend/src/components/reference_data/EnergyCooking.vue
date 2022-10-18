@@ -6,6 +6,14 @@
           <v-card-title>Stoves</v-card-title>
           <v-card-text>
             <v-data-table :headers="stoveHeaders" :items="stoves">
+              <template #[`item.image`]="{ item }">
+                <v-img
+                  :src="`${publicPath}images/energy/cookstoves/${item._id}.png`"
+                  contain
+                  width="64px"
+                  aspect-ratio="1"
+                ></v-img>
+              </template>
               <template #[`item.energyEfficiency`]="{ item }">
                 {{ item.energyEfficiency * 100 }}
               </template>
@@ -38,6 +46,10 @@ import { DataTableHeader } from "vuetify";
 export default class EnergyCooking extends Vue {
   readonly stoveHeaders: TableHeader<keyof CookingStove>[] = (
     [
+      {
+        text: "Image",
+        value: "image",
+      },
       {
         text: "Name",
         value: "name",
@@ -133,6 +145,10 @@ export default class EnergyCooking extends Vue {
       .getAllDocuments()
       .then((documents) => (this.fuels = documents))
       .finally(() => fuelsDatabase.cancel());
+  }
+
+  get publicPath(): string {
+    return process.env.BASE_URL;
   }
 
   mapHeader<V extends string>(header: TableHeader<V>): TableHeader<V> {
